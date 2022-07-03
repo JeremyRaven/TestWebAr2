@@ -1,33 +1,37 @@
-import * as THREE from './three.module.js';
+import {loadGLTF} from "./loader.js";
+const THREE = window.MINDAR.IMAGE.THREE;
 
 document.addEventListener('DOMContentLoaded', () => {
-  const scene = new THREE.Scene();
+  const start = async() => {
+    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+      container: document.body,
+      imageTargetSrc: './musicband.mind',
+    });
+    const {renderer, scene, camera} = mindarThree;
 
-  const geometry = new THREE.BoxGeometry(1, 1, 1);
-  const material = new THREE.MeshBasicMaterial({color: "#0000FF"});
-  const cube = new THREE.Mesh(geometry, material);
-  cube.position.set(0, 0, -2);
-  cube.rotation.set(0, Math.PI/4, 0);  
-  scene.add(cube);
+    const light = new THREE.HemisphereLight( 0xffffff, 0xbbbbff, 1 );
+    scene.add(light);
 
-  const camera = new THREE.PerspectiveCamera();
-  camera.position.set(1, 1, 5);
+    const gltf = await loadGLTF('./scene.gltf');
+    gltf.scene.scale.set(0.1, 0.1, 0.1);
+    gltf.scene.position.set(0, -0.4, 0);
 
-  const renderer = new THREE.WebGLRenderer({alpha: true});
-  renderer.setSize(500, 500);
-  renderer.render(scene, camera);
+    const anchor = mindarThree.addAnchor(0);
+    anchor.group.add(gltf.scene);
 
-  const video = document.createElement("video");
-  navigator.mediaDevices.getUserMedia({video: true}).then((stream) => {
-    video.srcObject = stream;
-    video.play();
-  });
+    const mixer = new THREE.AnimationMixer(gltf.scene);
+    const action = mixer.clipAction(gltf.animations[0]);
+    action.play();
 
-  video.style.position = "absolute";
-  video.style.width = renderer.domElement.width;
-  video.style.height = renderer.domElement.height;
-  renderer.domElement.style.position = "absolute";
+    const clock = new THREE.Clock();
 
-  document.body.appendChild(video);
-  document.body.appendChild(renderer.domElement);
+    await mindarThree.start();
+    renderer.setAnimationLoop(() => {
+      const delta = clock.getDelta();
+      gltf.scene.rotation.set(0, gltf.scene.rotation.y+delta, 0);
+      mixer.update(delta);
+      renderer.render(scene, camera);
+    });
+  }
+  start();
 });
