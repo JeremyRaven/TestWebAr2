@@ -1,4 +1,4 @@
-import * as THREE from 'three.module.js';
+import * as THREE from './three.module.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const scene = new THREE.Scene();
@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const material = new THREE.MeshBasicMaterial({color: "#0000FF"});
   const cube = new THREE.Mesh(geometry, material);
   cube.position.set(0, 0, -2);
-  cube.rotation.set(0, Math.PI/4, 0);
+  cube.rotation.set(0, Math.PI/4, 0);  
   scene.add(cube);
 
   const camera = new THREE.PerspectiveCamera();
